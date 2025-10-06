@@ -23,8 +23,10 @@ class ArucoControllerNode(Node):
             
         # --- OpenCV APIの修正を適用 ---
         self.aruco_dictionary = cv2.aruco.getPredefinedDictionary(dictionary_id)
-        self.aruco_parameters = cv2.aruco.DetectorParameters()
-        self.detector = cv2.aruco.ArucoDetector(self.aruco_dictionary, self.aruco_parameters)
+        # 修正点1: DetectorParameters() を DetectorParameters_create() に変更
+        self.aruco_parameters = cv2.aruco.DetectorParameters_create()
+        # 修正点2: ArucoDetectorのインスタンス化を削除 (新しいAPIでは不要)
+        # self.detector = cv2.aruco.ArucoDetector(self.aruco_dictionary, self.aruco_parameters)
         
         self.bridge = CvBridge()
         self.info_msg = None
@@ -76,7 +78,9 @@ class ArucoControllerNode(Node):
         cv_image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="mono8")
 
         # --- ARUCOマーカー検出 ---
-        (corners, marker_ids, rejected) = self.detector.detectMarkers(cv_image)
+        # 修正点3: detectMarkers関数を直接呼び出すように変更
+        (corners, marker_ids, rejected) = cv2.aruco.detectMarkers(
+            cv_image, self.aruco_dictionary, parameters=self.aruco_parameters)
 
         if marker_ids is not None:
             # 最も手前にある（または最初に検出された）マーカーを処理
@@ -126,3 +130,4 @@ def main(args=None):
 
 if __name__ == "__main__":
     main()
+
